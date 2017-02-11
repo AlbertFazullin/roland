@@ -12,6 +12,7 @@ import authCheckMiddleware from './server/middlewares/auth-check'
 import adminCheckMiddleware from './server/middlewares/admin-check'
 import siteCheckMiddleware from './server/middlewares/site-auth-check'
 import graphqlHTTP from 'express-graphql'
+import { graphqlBatchHTTPWrapper } from 'react-relay-network-layer';
 
 import schema from './data/schema'
 import { logIn, logOut } from './server/api/user'
@@ -65,10 +66,21 @@ app.use(expressSession({
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.use('/graphql', graphqlHTTP({
+const graphqlServer = graphqlHTTP({
 	schema,
-	graphiql: true,
-}));
+	formatError: error => ({
+		message: error.message,
+		stack: process.env.NODE_ENV === 'development' ? error.stack.split('\n') : null,
+	}),
+	graphiql: process.env.NODE_ENV === 'development'
+});
+
+app.use('/graphql/batch',
+	bodyParser.json(),
+	graphqlBatchHTTPWrapper(graphqlServer)
+);
+
+app.use('/graphql', graphqlServer);
 
 app.get('/robots.txt', (req, res) => res.sendFile(path.join(__dirname, 'robots.txt')));
 

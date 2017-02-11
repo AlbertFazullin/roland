@@ -4,13 +4,11 @@ import Relay from 'react-relay'
 import { match } from 'react-router';
 import routes from '../universal/routes';
 
-
 const GRAPHQL_URL = 'http://localhost:3000/graphql';
 
 const networkLayer = new Relay.DefaultNetworkLayer(GRAPHQL_URL);
 
 export default(req, res, next) => {
-	console.log(req.url);
 	match({ routes, location: req.url }, (error, redirectLocation, renderProps) => {
 		if (error) {
 			next(error);
